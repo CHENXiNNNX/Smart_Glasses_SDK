@@ -21,7 +21,7 @@
 			sound-dai = <&acodec>;
 		};
 	};
-
+	
 	vcc_1v8: vcc-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_1v8";
@@ -142,6 +142,7 @@
 				remote-endpoint = <&sc530ai_out>;
 				data-lanes = <1 2>;
 			};
+
 		};
 
 		port@1 {
@@ -225,6 +226,7 @@
 			};
 		};
 	};
+
 };
 
 &mipi0_csi2 {
