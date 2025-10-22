@@ -9,6 +9,34 @@
 		bootargs = "earlycon=uart8250,mmio32,0xff4c0000 console=ttyFIQ0 root=/dev/mmcblk1p7 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0";
 	};
 
+	reserved_memory: reserved-memory {
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		
+		drm_logo: drm-logo@00000000 {
+			compatible = "rockchip,drm-logo";
+			reg = <0x0 0x0>;
+		};
+		
+		rkisp_reserved: rkisp@0 {
+			compatible = "shared-dma-pool";
+			inactive;
+			reusable;
+			size = <0x800000>; //8M for ISP
+		};
+		
+		linux,cma {
+			status = "okay";
+			compatible = "shared-dma-pool";
+			inactive;
+			reusable;
+			size = <0xA00000>; //10M
+			linux,cma-default;
+		};
+	};
+
 	acodec_sound: acodec-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "rv-acodec";
@@ -143,6 +171,12 @@
 				data-lanes = <1 2>;
 			};
 
+			csi_dphy_input3: endpoint@3 {
+				reg = <3>;
+				remote-endpoint = <&imx219_out>;
+				data-lanes = <1 2>;
+			};
+
 		};
 
 		port@1 {
@@ -187,7 +221,7 @@
 
 	sc4336: sc4336@30 {
 		compatible = "smartsens,sc4336";
-		status = "okay";
+		status = "disabled";
 		reg = <0x30>;
 		clocks = <&cru MCLK_REF_MIPI0>;
 		clock-names = "xvclk";
@@ -208,7 +242,7 @@
 
 	sc530ai: sc530ai@30 {
 		compatible = "smartsens,sc530ai";
-		status = "okay";
+		status = "disabled";
 		reg = <0x30>;
 		clocks = <&cru MCLK_REF_MIPI0>;
 		clock-names = "xvclk";
@@ -223,6 +257,36 @@
 			sc530ai_out: endpoint {
 				remote-endpoint = <&csi_dphy_input2>;
 				data-lanes = <1 2>;
+			};
+		};
+	};
+
+	imx219: imx219@10 {
+		compatible = "sony,imx219";
+		status = "okay";
+		reg = <0x10>;
+
+		clocks = <&cru MCLK_REF_MIPI0>;
+
+
+		clock-names = "xvclk";
+		assigned-clocks = <&cru MCLK_REF_MIPI0>;
+        assigned-clock-rates = <24000000>;
+
+		pwdn-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&mipi_refclk_out0>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		rockchip,camera-module-name = "default";
+		rockchip,camera-module-lens-name = "default";
+		
+		port {
+			imx219_out: endpoint {
+				remote-endpoint = <&csi_dphy_input3>;
+				data-lanes = <1 2>;
+				link-frequencies = /bits/ 64 <456000000>;
 			};
 		};
 	};
@@ -290,6 +354,7 @@
 
 &rkisp {
 	status = "okay";
+	memory-region = <&rkisp_reserved>;
 };
 
 &rkisp_vir0 {
