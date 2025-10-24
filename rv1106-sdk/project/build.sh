@@ -142,7 +142,8 @@ function choose_target_board() {
 		"RV1103_Luckfox_Pico_Plus"
 		"RV1106_Luckfox_Pico_Pro_Max"
 		"RV1106_Luckfox_Pico_Ultra"
-		"RV1106_Luckfox_Pico_Ultra_W")
+		"RV1106_Luckfox_Pico_Ultra_W"
+		"RV1106_PangHu_V1")
 	local LF_BOOT_MEDIA=("SD_CARD" "SPI_NAND" "EMMC")
 	local LF_SYSTEM=("Buildroot" "Ubuntu" "Alpine")
 	local cnt=0 space8="        "
@@ -160,8 +161,9 @@ function choose_target_board() {
 	echo "${space8}${space8}[5] RV1106_Luckfox_Pico_Ultra"
 	echo "${space8}${space8}[6] RV1106_Luckfox_Pico_Ultra_W"
 	echo "${space8}${space8}[7] RV1106_Echo_Mate"
-	echo "${space8}${space8}[8] custom"
-	read -p "Which would you like? [0~8][default:7]: " HW_INDEX
+	echo "${space8}${space8}[8] RV1106_PangHu_V1"
+	echo "${space8}${space8}[9] custom"
+	read -p "Which would you like? [0~9][default:7]: " HW_INDEX
 
 	if [ -z "$HW_INDEX" ]; then
 		HW_INDEX=7
@@ -171,10 +173,10 @@ function choose_target_board() {
 		msg_error "Error: HW_INDEX is not a number."
 		exit 1
 	else
-		if (($HW_INDEX < 0 || $HW_INDEX > 8)); then
-			msg_error "Error: HW_INDEX is not in the range 0-8."
+		if (($HW_INDEX < 0 || $HW_INDEX > 9)); then
+			msg_error "Error: HW_INDEX is not in the range 0-9."
 			exit 1
-		elif [ $HW_INDEX == 8 ]; then
+		elif [ $HW_INDEX == 9 ]; then
 			for item in ${RK_TARGET_BOARD_ARRAY[@]}; do
 				local f0 boot_medium ddr sys_ver hardware_version product_name
 				echo "----------------------------------------------------------------"
@@ -235,8 +237,12 @@ function choose_target_board() {
 	elif (("$HW_INDEX" == 7)); then
 		echo "${space8}${space8}[0] SD_CARD"
 		echo "${space8}${space8}[1] SPI_NAND"
-		read -p "Which would you like? [0][default:0]: " BM_INDEX
+		read -p "Which would you like? [0~1][default:0]: " BM_INDEX
 		MAX_BM_INDEX=1
+	elif (("$HW_INDEX" == 8)); then
+		echo "${space8}${space8}[0] SPI_NAND"
+		read -p "Which would you like? [0][default:0]: " BM_INDEX
+		MAX_BM_INDEX=0
 	fi
 
 	if [ -z "$BM_INDEX" ]; then
@@ -291,6 +297,9 @@ function choose_target_board() {
 	if (("$HW_INDEX" == 7)); then
 		echo "CHOSE ECHO MATE"
 		RK_BUILD_TARGET_BOARD="BoardConfig_IPC/BoardConfig-${LF_BOOT_MEDIA[$BM_INDEX]}-${LF_SYSTEM[$SYS_INDEX]}-RV1106_Echo_Mate-DeskMate.mk"
+	elif (("$HW_INDEX" == 8)); then
+		echo "CHOSE PANGHU V1"
+		RK_BUILD_TARGET_BOARD="BoardConfig_IPC/BoardConfig-${LF_BOOT_MEDIA[1]}-${LF_SYSTEM[$SYS_INDEX]}-RV1106_PangHuV1.mk"
 	else
 		RK_BUILD_TARGET_BOARD="BoardConfig_IPC/BoardConfig-${LF_BOOT_MEDIA[$BM_INDEX]}-${LF_SYSTEM[$SYS_INDEX]}-${LF_HARDWARE[$HW_INDEX]}-IPC.mk"
 	fi
