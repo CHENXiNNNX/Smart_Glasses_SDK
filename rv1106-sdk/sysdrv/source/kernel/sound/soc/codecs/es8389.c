@@ -831,6 +831,7 @@ static int es8389_probe(struct snd_soc_component *component)
 	es8389_init(component);
 	es8389_set_bias_level(component, SND_SOC_BIAS_STANDBY);
 
+	dev_info(component->dev, "ES8389 codec initialized successfully\n");
 	return 0;
 }
 
@@ -901,6 +902,9 @@ static int es8389_i2c_probe(struct i2c_client *i2c_client,
 {
 	struct es8389_private *es8389;
 	int ret;
+	unsigned int chip_id0, chip_id1;
+	void __iomem *reg_addr;
+	int val = 0;
 
 	es8389 = devm_kzalloc(&i2c_client->dev, sizeof(*es8389), GFP_KERNEL);
 	if (es8389 == NULL)
@@ -912,10 +916,35 @@ static int es8389_i2c_probe(struct i2c_client *i2c_client,
 		return dev_err_probe(&i2c_client->dev, PTR_ERR(es8389->regmap),
 			"regmap_init() failed\n");
 
+	/* 读取芯片ID验证 */
+	ret = regmap_read(es8389->regmap, ES8389_CHIP_ID0, &chip_id0);
+	if (ret == 0)
+		ret = regmap_read(es8389->regmap, ES8389_CHIP_ID1, &chip_id1);
+	
+	if (ret == 0) {
+		dev_info(&i2c_client->dev, "ES8389 chip detected, ID: 0x%02x%02x\n", 
+			chip_id1, chip_id0);
+	} else {
+		dev_warn(&i2c_client->dev, "Failed to read chip ID, ret=%d\n", ret);
+	}
+
 	ret =  devm_snd_soc_register_component(&i2c_client->dev,
 			&soc_codec_dev_es8389,
 			&es8389_dai,
 			1);
+
+	if (ret == 0)
+		dev_info(&i2c_client->dev, "ES8389 codec registered successfully\n");
+	
+	reg_addr = ioremap(0xff000004, 4);
+	if (reg_addr) {
+		writel(0xffff2220, reg_addr);
+		val = readl(reg_addr);
+		printk("val = 0x%x\n",val);
+		iounmap(reg_addr);
+	} else {
+		printk("Failed to map CPU config register\n");
+	}
 
 	return ret;
 }

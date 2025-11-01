@@ -10,7 +10,6 @@
 	};
 
 	reserved_memory: reserved-memory {
-		status = "okay";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
@@ -38,6 +37,7 @@
 	};
 
 	acodec_sound: acodec-sound {
+		status = "disabled";
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "rv-acodec";
 		simple-audio-card,format = "i2s";
@@ -49,7 +49,47 @@
 			sound-dai = <&acodec>;
 		};
 	};
+
+	/* ES8389音频编解码器声卡 */
+	es8389_sound: es8389-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "ES8389-HiFi";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		
+		/* PA功放控制 */
+		simple-audio-card,aux-devs = <&pa_amp>;
+		
+		simple-audio-card,widgets =
+			"Microphone", "Mic Jack",
+			"Headphone", "Headphones",
+			"Speaker", "Speaker";
+		
+		simple-audio-card,routing =
+			"INPUT1", "Mic Jack",
+			"INPUT2", "Mic Jack",
+			"Headphones", "HPOL",
+			"Headphones", "HPOR",
+			"Speaker", "HPOL",
+			"Speaker", "HPOR";
+		
+		simple-audio-card,cpu {
+			sound-dai = <&i2s0_8ch>;
+		};
+		
+		simple-audio-card,codec {
+			sound-dai = <&es8389>;
+		};
+	};
 	
+	/* PA功放控制节点 */
+	pa_amp: pa-amplifier {
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&gpio2 RK_PA3 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "PA";
+	};
+
 	vcc_1v8: vcc-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_1v8";
@@ -78,6 +118,7 @@
 		regulator-boot-on;
 	};
 
+	// 这个ddr的电压是axp2101给的电压，需配置2101之后才可以设置ddr的电压(待实现)
 	vdd_ddr: vdd-ddr {
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_ddr";
@@ -111,13 +152,18 @@
 &i2s0_8ch {
 	#sound-dai-cells = <0>;
 	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s0_custom_pins>;
+	rockchip,playback-channels = <2>;
+	rockchip,capture-channels = <2>;
 };
 
 &acodec {
+	status = "disabled";
 	#sound-dai-cells = <0>;
 	pa-ctl-gpios = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>;
-	status = "okay";
 };
+
 /***************************** CPU ********************************/
 &cpu0 {
 	cpu-supply = <&vdd_arm>;
@@ -186,6 +232,31 @@
 				remote-endpoint = <&mipi_csi2_input>;
 			};
 		};
+	};
+};
+
+/* I2C3: ES8389音频编解码器 */
+&i2c3 {
+	es8389: es8389@10 {
+		compatible = "everest,es8389";
+		reg = <0x10>;
+		status = "okay";
+		
+		/* MCLK时钟配置 */
+		clocks = <&cru MCLK_I2S0_8CH_TX>;
+		clock-names = "mclk";
+		assigned-clocks = <&cru MCLK_I2S0_8CH_TX>;
+		assigned-clock-rates = <12288000>;  /* 48kHz * 256 */
+		
+		/* MCLK来源: 0=MCLK引脚, 1=SCLK引脚 */
+		everest,mclk-src = <0>;
+		
+		/* 电源域配置 */
+		AVDD-supply = <&vcc_3v3>;
+		DVDD-supply = <&vcc_1v8>;
+		HPVDD-supply = <&vcc_3v3>;
+		
+		#sound-dai-cells = <0>;
 	};
 };
 
@@ -376,7 +447,7 @@
 };
 
 &i2c3 {
-	pinctrl-0 = <&i2c3m1_xfer &i2c3m0_xfer>;
+	pinctrl-0 = <&i2c3m1_xfer>;
 };
 
 // &i2c4 {
@@ -401,7 +472,22 @@
 };
 
 &pinctrl {
-
+	/* I2S0自定义引脚配置 (不含GPIO2_A3，避免与PA控制冲突) */
+	i2s0_custom {
+		i2s0_custom_pins: i2s0-custom-pins {
+			rockchip,pins =
+				/* i2s0_sclk */
+				<2 RK_PA0 2 &pcfg_pull_none>,
+				/* i2s0_lrck */
+				<2 RK_PA1 2 &pcfg_pull_none>,
+				/* i2s0_mclk */
+				<2 RK_PA2 2 &pcfg_pull_none>,
+				/* i2s0_sdo0 */
+				<2 RK_PA5 2 &pcfg_pull_none>,
+				/* i2s0_sdi0 */
+				<2 RK_PA4 2 &pcfg_pull_none>;
+		};
+	};
 
 };
 
