@@ -43,10 +43,10 @@
 	vdd_arm: vdd-arm {
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_arm";
-		regulator-min-microvolt = <900000>;
-		regulator-max-microvolt = <900000>;
+		regulator-min-microvolt = <800000>;
+		regulator-max-microvolt = <1000000>;
+		regulator-init-microvolt = <900000>;
 		regulator-always-on;
-
 		regulator-boot-on;
 	};
 	leds: leds {
@@ -60,16 +60,16 @@
 
 	// DHT11
 	dht11_sensor {
-        compatible = "dht11";
-        pinctrl-names = "default";
-        pinctrl-0 = <&gpio1_pc7>;
+		compatible = "dht11";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio1_pc7>;
 
-        dht11@1 {
-            gpios = <&gpio1 RK_PC7 GPIO_ACTIVE_HIGH>;
-            label = "dht11";
-            linux,default-trigger = "humidity";
-        };
-    };
+		dht11@1 {
+			gpios = <&gpio1 RK_PC7 GPIO_ACTIVE_HIGH>;
+			label = "dht11";
+			linux,default-trigger = "humidity";
+		};
+	};
 
 };
 
@@ -124,13 +124,7 @@
 
 			csi_dphy_input1: endpoint@1 {
 				reg = <1>;
-				remote-endpoint = <&sc4336_out>;
-				data-lanes = <1 2>;
-			};
-
-			csi_dphy_input2: endpoint@2 {
-				reg = <2>;
-				remote-endpoint = <&sc530ai_out>;
+				remote-endpoint = <&mis5001_out>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -151,8 +145,6 @@
 &i2c4 {
 	status = "okay";
 	clock-frequency = <400000>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c4m2_xfer>;
 
 	sc3336: sc3336@30 {
 		compatible = "smartsens,sc3336";
@@ -175,34 +167,13 @@
 		};
 	};
 
-	sc4336: sc4336@30 {
-		compatible = "smartsens,sc4336";
+	mis5001: mis5001@31 {
+		compatible = "imagedesign,mis5001";
 		status = "okay";
-		reg = <0x30>;
+		reg = <0x31>;
 		clocks = <&cru MCLK_REF_MIPI0>;
 		clock-names = "xvclk";
-		pwdn-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&mipi_refclk_out0>;
-		rockchip,camera-module-index = <0>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "OT01";
-		rockchip,camera-module-lens-name = "40IRC_F16";
-		port {
-			sc4336_out: endpoint {
-				remote-endpoint = <&csi_dphy_input1>;
-				data-lanes = <1 2>;
-			};
-		};
-	};
-
-	sc530ai: sc530ai@30 {
-		compatible = "smartsens,sc530ai";
-		status = "okay";
-		reg = <0x30>;
-		clocks = <&cru MCLK_REF_MIPI0>;
-		clock-names = "xvclk";
-		pwdn-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&mipi_refclk_out0>;
 		rockchip,camera-module-index = <0>;
@@ -210,8 +181,8 @@
 		rockchip,camera-module-name = "CMK-OT2115-PC1";
 		rockchip,camera-module-lens-name = "30IRC-F16";
 		port {
-			sc530ai_out: endpoint {
-				remote-endpoint = <&csi_dphy_input2>;
+			mis5001_out: endpoint {
+				remote-endpoint = <&csi_dphy_input1>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -299,22 +270,22 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	spidev@0 {
-    compatible = "rockchip,spidev";
+	compatible = "rockchip,spidev";
 		spi-max-frequency = <50000000>;
 		reg = <0>;
 	};
 
-  fbtft@0{
-    compatible = "sitronix,st7789v";
-    reg = <0>;
-    spi-max-frequency = <20000000>;
-    fps = <30>;
-    buswidth = <8>;
-    debug = <0x7>;
-    led-gpios = <&gpio2 RK_PB0 GPIO_ACTIVE_LOW>;//BL
-    dc = <&gpio2 RK_PB1 GPIO_ACTIVE_HIGH>;      //DC
-    reset = <&gpio1 RK_PC3 GPIO_ACTIVE_LOW>;    //RES
-  };
+	fbtft@0 {
+		compatible = "sitronix,st7789v";
+		reg = <0>;
+		spi-max-frequency = <20000000>;
+		fps = <30>;
+		buswidth = <8>;
+		debug = <0x7>;
+		led-gpios = <&gpio2 RK_PB0 GPIO_ACTIVE_HIGH>;//BL
+		dc-gpios = <&gpio2 RK_PB1 GPIO_ACTIVE_HIGH>;//DC
+		reset-gpios = <&gpio1 RK_PC3 GPIO_ACTIVE_LOW>;//RES
+	};
 };
 // I2C
 &i2c0 {
@@ -329,9 +300,11 @@
 	pinctrl-0 = <&i2c3m1_xfer &i2c3m0_xfer>;
 };
 
-// &i2c4 {
-//  pinctrl-0 = <&i2c4m0_xfer>;
-// };
+&i2c4 {
+	pinctrl-names = "default", "conifg";
+	pinctrl-0 = <&i2c4m2_xfer>;
+	pinctrl-1 = <&i2c4m0_xfer>;
+};
 
 // UART
 &uart0 {
@@ -364,7 +337,7 @@
 	pinctrl-0 = <&pwm4m2_pins>;
 };
 &pwm5 {
-	pinctrl-0 = <&pwm5m2_pins>;
+	pinctrl-0 = <&pwm5m1_pins &pwm5m2_pins>;
 };
 &pwm6 {
 	pinctrl-0 = <&pwm6m1_pins &pwm6m2_pins>;
@@ -376,10 +349,10 @@
 	pinctrl-0 = <&pwm9m1_pins>;
 };
 &pwm10 {
-	pinctrl-0 = <&pwm10m2_pins>;
+	pinctrl-0 = <&pwm10m1_pins &pwm10m2_pins>;
 };
 &pwm11 {
-	pinctrl-0 = <&pwm11m1_pins>;
+	pinctrl-0 = <&pwm11m1_pins &pwm11m2_pins>;
 };
 
 &pinctrl {
@@ -398,10 +371,10 @@
 		};
 	};
 
-    gpio1-pc7 {
-        gpio1_pc7:gpio1-pc7 {
-            rockchip,pins = <1 RK_PC7 RK_FUNC_GPIO &pcfg_pull_none>;
-    };
+	gpio1-pc7 {
+		gpio1_pc7: gpio1-pc7 {
+			rockchip,pins = <1 RK_PC7 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
 	};
 };
 

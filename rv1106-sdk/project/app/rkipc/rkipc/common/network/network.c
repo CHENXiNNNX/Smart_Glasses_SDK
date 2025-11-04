@@ -215,7 +215,7 @@ int rk_network_ipv4_set(char *interface, char *method, char *address, char *netm
 		// Ether_info.v4_is_dhcp = true;
 		memcpy(netmode, method, strlen(method));
 		snprintf(netmode, sizeof(netmode), "%s", method);
-		system("udhcpc &");
+		system("udhcpc -n &");
 	}
 
 	return 0;
@@ -674,7 +674,7 @@ int rk_network_get_cable_state() {
 	struct sockaddr_nl addr;
 	struct nlmsghdr *nh;
 	struct ifinfomsg *ifinfo;
-	char name[IFNAMSIZ], cmd1[64], cmd2[64];
+	char name[IFNAMSIZ], cmd1[64], cmd2[64], cmd3[64];
 	// struct rtattr *attr;
 
 	fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
@@ -696,12 +696,21 @@ int rk_network_get_cable_state() {
 			ifinfo = NLMSG_DATA(nh);
 
 			if_indextoname(ifinfo->ifi_index, name);
+			if (strcmp(name, "usb0") == 0) {
+				continue;
+			}
+			if (strcmp(name, "wlan0") == 0) {
+				continue;
+			}
+
 			LOG_INFO("\n[%s] link %s\n", name, (ifinfo->ifi_flags & IFF_LOWER_UP) ? "up" : "down");
 
 			memset(cmd1, 0, 32);
 			memset(cmd2, 0, 32);
+			memset(cmd3, 0, 32);
 			sprintf(cmd1, "udhcpc -i %s -T 1 -A 0 -b -q", name);
 			sprintf(cmd2, "ifconfig %s 0.0.0.0", name);
+			sprintf(cmd3, "udhcpc -i eth0 -T 1 -A 0 -b -q");
 
 			if (ifinfo->ifi_flags & IFF_LOWER_UP) {
 				status = 1;
@@ -709,6 +718,7 @@ int rk_network_get_cable_state() {
 				system("route del default gw 0.0.0.0");
 				system("cat /dev/null > /etc/resolv.conf");
 				system(cmd1);
+				system(cmd3);
 			} else {
 				status = 0;
 				system(cmd2);

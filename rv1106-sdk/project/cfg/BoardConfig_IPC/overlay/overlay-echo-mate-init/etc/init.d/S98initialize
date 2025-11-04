@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Load kernel modules from /oem/usr/ko
+#
+
+case "$1" in
+    start)
+        echo "Loading kernel modules..."
+        
+        # Load insmod_ko.sh if exists
+        if [ -f /oem/usr/ko/insmod_ko.sh ]; then
+            chmod a+x /oem/usr/ko/insmod_ko.sh
+            /oem/usr/ko/insmod_ko.sh
+            echo "insmod_ko.sh loaded"
+        else
+            echo "Warning: /oem/usr/ko/insmod_ko.sh not found"
+        fi
+        
+        # Note: insmod_wifi.sh is called by insmod_ko.sh in background
+        ;;
+    stop)
+        echo "Unloading kernel modules not supported"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0
+

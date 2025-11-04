@@ -435,7 +435,8 @@ void usb_wwan_close(struct usb_serial_port *port)
 
 	/*
 	 * Need to take susp_lock to make sure port is not already being
-	 * resumed, but no need to hold it due to initialized
+	 * resumed, but no need to hold it due to the tty-port initialized
+	 * flag.
 	 */
 	spin_lock_irq(&intfdata->susp_lock);
 	if (--intfdata->open_ports == 0)
@@ -479,6 +480,13 @@ static struct urb *usb_wwan_setup_urb(struct usb_serial_port *port,
 
 	if (intfdata->use_zlp && dir == USB_DIR_OUT)
 		urb->transfer_flags |= URB_ZERO_PACKET;
+
+#if 1 /* Added by Simcom for Zero Packet */
+	if (dir == USB_DIR_OUT) {
+		if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E))
+			urb->transfer_flags |= URB_ZERO_PACKET;
+	}
+#endif
 
 	return urb;
 }

@@ -6,13 +6,12 @@
 /dts-v1/;
 #include "rv1106.dtsi"
 #include "rv1106-luckfox-pico-ultra-ipc.dtsi"
-#include "rv1106-thunder-boot-emmc.dtsi"
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/display/media-bus-format.h>
 
 / {
 	model = "Luckfox Pico Ultra W";
-	compatible = "rockchip,rv1103g-38x38-ipc-v10", "rockchip,rv1106";
+	compatible = "rockchip,rv1103g-38x38-ipc-v10", "rockchip,rv1106g3";
 
 	restart-poweroff {
 		compatible = "restart-poweroff";
@@ -24,7 +23,40 @@
 		reset-gpios = <&gpio1 RK_PA2 GPIO_ACTIVE_LOW>;
 	};
 
+	wireless_bluetooth: wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		uart_rts_gpios = <&gpio0 RK_PA5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default", "rts_gpio";
+		pinctrl-0 = <&uart1m0_rtsn>;
+		pinctrl-1 = <&uart1_gpios>;
+		BT,wake_gpio     = <&gpio0 RK_PA2 GPIO_ACTIVE_HIGH>;
+		BT,wake_host_irq = <&gpio1 RK_PA2 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
 };
+
+/**********CRU**********/
+//&cru {
+//	assigned-clocks =
+//		<&cru PLL_GPLL>, <&cru PLL_CPLL>,
+//		<&cru ARMCLK>,
+//		<&cru ACLK_PERI_ROOT>, <&cru HCLK_PERI_ROOT>,
+//		<&cru PCLK_PERI_ROOT>, <&cru ACLK_BUS_ROOT>,
+//		<&cru PCLK_TOP_ROOT>, <&cru PCLK_PMU_ROOT>,
+//		<&cru HCLK_PMU_ROOT>, <&cru CLK_500M_SRC>;
+//	assigned-clock-rates =
+//		<1188000000>, <700000000>,
+//		<1104000000>,
+//		<400000000>, <200000000>,
+//		<100000000>, <300000000>,
+//		<100000000>, <100000000>,
+//		<200000000>, <700000000>;
+//};
+
+/**********NPU**********/
+//&npu {
+//	assigned-clock-rates = <700000000>;
+//};
 
 /**********EMMC**********/
 &emmc {
@@ -47,20 +79,20 @@
 
 /**********SDIO-WIFI**********/
 &sdmmc {
-        max-frequency = <50000000>;
-        bus-width = <4>;
-        cap-sd-highspeed;
-        cap-sdio-irq;
-        keep-power-in-suspend;
-        non-removable;
-        rockchip,default-sample-phase = <90>;
-        // no-sd;
-        // no-mmc;
-        supports-sdio;
-        mmc-pwrseq = <&sdio_pwrseq>;
-        pinctrl-names = "default";
-        pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_bus4 &sdmmc0_det>;
-        status = "okay";
+	max-frequency = <50000000>;
+	bus-width = <4>;
+	cap-sd-highspeed;
+	cap-sdio-irq;
+	keep-power-in-suspend;
+	non-removable;
+	rockchip,default-sample-phase = <90>;
+	// no-sd;
+	// no-mmc;
+	supports-sdio;
+	mmc-pwrseq = <&sdio_pwrseq>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_bus4 &sdmmc0_det>;
+	status = "okay";
 };
 
 &pinctrl{
@@ -70,7 +102,7 @@
 				/* sdmmc0_det */
 				<3 RK_PA1 1 &pcfg_pull_down>;
 		};
-  };
+	};
 };
 
 
@@ -83,7 +115,7 @@
 &usbdrd_dwc3 {
 	status = "okay";
 	dr_mode = "peripheral";
-  #dr_mode = "host";
+	//dr_mode = "host";
 };
 
 /**********RTC**********/
@@ -95,20 +127,16 @@
 &uart1 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn &uart1m0_rtsn>;
+	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn>;
 };
 
 &pinctrl {
-  uart1 {
-    uart1m0_ctsn: uart1m0-ctsn{
-      rockchip,pins = <0 RK_PA6 2 &pcfg_pull_down>;
-    };
-    uart1m0_rtsn: uart1m0-rtsn{
-      rockchip,pins = <0 RK_PA5 2 &pcfg_pull_down>;
-    };
-  };
+	wireless-bluetooth {
+		uart1_gpios: uart1-gpios {
+			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
 };
-
 
 /**********SPI**********/
 &spi0 {

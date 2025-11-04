@@ -3,7 +3,7 @@
 #################################################
 # 	Board Config
 #################################################
-
+export LF_ORIGIN_BOARD_CONFIG=BoardConfig-EMMC-Buildroot-RV1106_Luckfox_Pico_Ultra_W-IPC.mk
 # Target CHIP
 export RK_CHIP=rv1106
 
@@ -20,11 +20,11 @@ export RK_KERNEL_DTS=rv1106g-luckfox-pico-ultra-w.dts
 #	BOOT_MEDIUM
 #################################################
 
-# Target boot medium: emmc/spi_nor/spi_nand
+# Target boot medium
 export RK_BOOT_MEDIUM=emmc
 
 # Uboot defconfig fragment
-export RK_UBOOT_DEFCONFIG_FRAGMENT=rk-emmc.config
+export RK_UBOOT_DEFCONFIG_FRAGMENT="rk-emmc.config rv1106-luckfox-rgb-reset.config"
 
 # specify post.sh for delete/overlay files
 # export RK_PRE_BUILD_OEM_SCRIPT=rv1103-spi_nor-post.sh
@@ -58,7 +58,7 @@ export RK_PARTITION_FS_TYPE_CFG=rootfs@IGNORE@ext4,userdata@/userdata@ext4,oem@/
 #	TARGET_ROOTFS
 #################################################
 
-# Target rootfs : ubuntu(only emmc)/buildroot/busybox
+# Target rootfs
 export LF_TARGET_ROOTFS=buildroot
 
 # Buildroot defconfig
@@ -90,7 +90,7 @@ export RK_KERNEL_DEFCONFIG_FRAGMENT=rv1106-bt.config
 # RK_CAMERA_SENSOR_IQFILES format:
 #     "iqfile1 iqfile2 iqfile3 ..."
 # ./build.sh media and copy <SDK root dir>/output/out/media_out/isp_iqfiles/$RK_CAMERA_SENSOR_IQFILES
-export RK_CAMERA_SENSOR_IQFILES="sc4336_OT01_40IRC_F16.json sc3336_CMK-OT2119-PC1_30IRC-F16.json"
+export RK_CAMERA_SENSOR_IQFILES="sc4336_OT01_40IRC_F16.json sc3336_CMK-OT2119-PC1_30IRC-F16.json mis5001_CMK-OT2115-PC1_30IRC-F16.json"
 #export RK_CAMERA_SENSOR_IQFILES="sc4336_OT01_40IRC_F16.json sc3336_CMK-OT2119-PC1_30IRC-F16.json sc530ai_CMK-OT2115-PC1_30IRC-F16.json"
 
 # Config sensor lens CAC calibrattion bin files
@@ -114,3 +114,15 @@ export RK_ENABLE_WIFI_CHIP=AIC8800DC
 export LF_WIFI_SSID="Your wifi ssid"
 export LF_WIFI_PSK="Your wifi password"
 
+#################################################
+#  PRE and POST
+#################################################
+
+# specify pre.sh for delete/overlay files
+export RK_PRE_BUILD_OEM_SCRIPT=luckfox-buildroot-oem-pre.sh
+
+# specify post.sh for delete/overlay files
+export RK_PRE_BUILD_USERDATA_SCRIPT=luckfox-userdata-pre.sh
+
+# declare overlay directory
+export RK_POST_OVERLAY="overlay-luckfox-config overlay-luckfox-buildroot-init overlay-luckfox-buildroot-shadow overlay-luckfox-buildroot-rgb"
