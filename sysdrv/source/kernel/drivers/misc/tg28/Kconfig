@@ -1,0 +1,5 @@
+config TG28_POWERKEY
+    bool "TG28-POWERKey Driver"
+    depends on LEDS_WS2812_PWM
+    default y
+    

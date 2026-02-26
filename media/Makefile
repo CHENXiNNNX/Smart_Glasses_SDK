@@ -1,4 +1,3 @@
-
 MAKEFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 export LC_ALL=C
 SHELL:=/bin/bash
@@ -24,7 +23,6 @@ media_src := $(filter-out ./samples/,$(media_src))
 ##  build target
 ################################################################################
 all: media_libs
-	make -C ./samples
 	$(call MAROC_COPY_PKG_TO_MEDIA_OUTPUT, $(RK_PROJECT_PATH_MEDIA), $(RK_MEDIA_OUTPUT))
 
 media_libs:

@@ -1,0 +1,1 @@
+obj-$(CONFIG_LEDS_WS2812_PWM) += leds-ws2812-pwm.o

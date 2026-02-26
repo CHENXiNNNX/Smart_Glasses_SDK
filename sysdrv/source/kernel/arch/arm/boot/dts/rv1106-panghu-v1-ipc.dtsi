@@ -108,24 +108,22 @@
 
 	/* AXP2101按键配置 - IRQ连接到GPIO1PD0 */
 	/* 注意：AXP2101的IRQ引脚通常是低电平有效（开漏输出） */
-	axp2101_key: axp2101-key {
+/*	axp2101_key: axp2101-key {
 		compatible = "x-powers,axp2101-key";
 		irq-gpios = <&gpio1 RK_PD0 GPIO_ACTIVE_LOW>;
-		
-		/* 按键码配置 */
-		keycode-single = <116>;  /* KEY_POWER - 单击 */
-		keycode-double = <102>;  /* KEY_HOME - 双击 */
-		keycode-short = <114>;   /* KEY_VOLUMEDOWN - 短按 */
-		keycode-long = <115>;    /* KEY_VOLUMEUP - 长按 */
-		
-		/* 时间阈值配置（毫秒） */
-		double-click-interval = <300>;  /* 双击间隔时间 */
-		short-press-time = <50>;        /* 短按时间 */
-		long-press-time = <1000>;       /* 长按时间 */
-		debounce-time = <20>;            /* 消抖时间 */
-		
+		keycode-single = <116>;  
+		keycode-double = <102>;  
+		keycode-short = <114>;   
+		keycode-long = <115>;   
+		double-click-interval = <300>;  
+		short-press-time = <50>;        
+		long-press-time = <1000>;       
+		debounce-time = <20>;           
 		status = "okay";
 	};
+*/
+
+
 
 	/* WS2812 LED驱动 - 使用PWM2M0接口，PWM+DMA方式 */
 	ws2812 {
@@ -296,6 +294,52 @@
 		linux,keycodes = <KEY_1 KEY_2 KEY_3>;
 		wakeup-source;
 	};
+
+/*
+		tg28_powerkey: tg28_powerkey@34 {
+		status = "okay";
+		compatible = "tg28,powerkey";
+		reg = <0x34>;
+		interrupt-parent = <&gpio1>;
+	    pinctrl-names = "default";
+		pinctrl-0 = <&key_custom_pins>;
+		interrupts = <RK_PD0 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-names = "powerkey-int";
+		key-short-press-ms = <50>;
+		
+		powerkey-gpio = <&gpio1 RK_PD0 GPIO_ACTIVE_LOW>;
+		key-long-press-ms = <1000>;
+		key-double-click-ms = <300>;
+		key-debounce-ms = <20>;
+	};
+	*/
+
+
+// 2. TG28设备节点（修正中断/GPIO配置）
+tg28_powerkey: tg28_powerkey@34 {
+    status = "okay";
+    compatible = "tg28,powerkey";  // 必须与驱动of_match_table一致
+    reg = <0x34>;                  // TG28的I2C地址（需与硬件一致）
+    
+    // 绑定pinctrl配置
+    pinctrl-names = "default";
+    pinctrl-0 = <&key_custom_pins>;
+    
+
+    interrupt-parent = <&gpio0>;
+    interrupts = <4 IRQ_TYPE_EDGE_FALLING>;  // 
+    interrupt-names = "powerkey-int";
+    
+ 
+    powerkey-gpio = <&gpio0 4 GPIO_ACTIVE_LOW>;  // 
+    
+    // 自定义参数（驱动中解析）
+    key-short-press-ms = <50>;
+    key-long-press-ms = <1000>;
+    key-double-click-ms = <300>;
+    key-debounce-ms = <20>;
+};
+
 };
 
 &i2c4 {
@@ -454,6 +498,24 @@
 			rockchip,pins = <2 RK_PA5 2 &pcfg_pull_none>;
 		};		
 	};
+
+/*
+		key_custom {
+		key_custom_pins: key_custom_pins {
+			rockchip,pins =
+				<0 RK_PA4 0 &pcfg_pull_up>;
+		};
+	}; 
+	*/
+
+		key_custom {
+		key_custom_pins: key_custom_pins {
+			rockchip,pins =
+				<0 RK_PA4 0 &pcfg_pull_up>;
+		};
+	}; 
+
+
 };
 
 //功放

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eE
-
+#export RK_ENABLE_SAMPLE=n
 export LC_ALL=C
 export LD_LIBRARY_PATH=
 RECORD_IFS="$IFS"

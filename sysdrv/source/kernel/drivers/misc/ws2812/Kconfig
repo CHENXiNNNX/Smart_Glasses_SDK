@@ -1,0 +1,4 @@
+config LEDS_WS2812_PWM
+    bool "LEDS-WS2812-PWM LED Driver"
+    default y
+
